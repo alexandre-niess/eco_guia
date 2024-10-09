@@ -13,6 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0  # Permite buscar todo o histórico
           ref: master  # Troca para a branch master do fork
 
       - name: Set up git
@@ -29,13 +30,13 @@ jobs:
         run: |
           git fetch upstream  # Traz todas as branches e commits do repositório original
 
-      - name: Verificar se a branch 'master' existe localmente
+      - name: Checkout master branch
         run: |
-          git checkout master || git checkout -b master --track origin/master
+          git checkout master  # Garante que estamos na branch master
 
-      - name: Rebase master com upstream/master
+      - name: Rebase master with upstream/master
         run: |
-          git rebase upstream/master || exit 1  # Rebase dos commits do upstream/master no topo do fork
+          git rebase upstream/master || { echo "Rebase failed"; exit 1; }  # Rebase dos commits do upstream/master no topo do fork
 
       - name: Push changes to origin
         run: |
