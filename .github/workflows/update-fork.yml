@@ -13,18 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          ref: master # Branch correta
+          ref: master  # Certifique-se de que estamos na branch master
 
       - name: Set up git
         run: |
           git config --global user.email "alexandrefersoa@gmail.com"
           git config --global user.name "Alexandre Niess"
 
+      - name: Verificar repositórios remotos
+        run: git remote -v  # Verificar se o upstream já está configurado corretamente
+
       - name: Add upstream repository
         run: git remote add upstream https://github.com/sabarense/eco_guia || true
 
       - name: Fetch upstream
-        run: git fetch upstream
+        run: |
+          git fetch upstream
+          git branch -a  # Verificar as branches disponíveis
 
       - name: Verificar se a branch 'master' existe
         run: |
@@ -45,6 +50,9 @@ jobs:
           else
             echo "Merge realizado com sucesso."
           fi
+
+      - name: Verificar estado após merge
+        run: git status  # Verificar o estado atual do repositório após o merge
 
       - name: Push changes
         if: success()
