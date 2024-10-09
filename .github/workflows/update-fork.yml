@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          ref: main
+          ref: master # Branch correta
 
       - name: Set up git
         run: |
@@ -21,15 +21,31 @@ jobs:
           git config --global user.name "Alexandre Niess"
 
       - name: Add upstream repository
-        run: git remote add upstream https://github.com/sabarense/eco_guia
+        run: git remote add upstream https://github.com/sabarense/eco_guia || true
 
       - name: Fetch upstream
         run: git fetch upstream
 
+      - name: Verificar se a branch 'master' existe
+        run: |
+          if git show-ref --quiet refs/heads/master; then
+            echo "Branch 'master' encontrada, trocando para 'master'"
+            git checkout master
+          else
+            echo "Branch 'master' não encontrada, criando 'master'"
+            git checkout -b master
+          fi
+
       - name: Merge upstream changes
         run: |
-          git checkout main
-          git merge upstream/main
+          git merge upstream/master --no-commit || true
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Conflitos encontrados, merge incompleto."
+            exit 1
+          else
+            echo "Merge realizado com sucesso."
+          fi
 
       - name: Push changes
-        run: git push origin main
+        if: success()
+        run: git push origin master
