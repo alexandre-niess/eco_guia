@@ -2,8 +2,8 @@ name: Update Fork
 
 on:
   schedule:
-    - cron: "0 0 * * *" # Roda diariamente à meia-noite (UTC)
-  workflow_dispatch: # Permite rodar manualmente
+    - cron: "0 0 * * *"  # Roda diariamente à meia-noite (UTC)
+  workflow_dispatch:  # Permite rodar manualmente
 
 jobs:
   update-fork:
@@ -13,40 +13,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          ref: master  # Certifique-se de estar na branch master do fork
+          ref: master  # Troca para a branch master do fork
 
       - name: Set up git
         run: |
           git config --global user.email "alexandrefersoa@gmail.com"
           git config --global user.name "Alexandre Niess"
 
-      - name: Verificar remotes existentes
-        run: git remote -v  # Verificar se upstream já está configurado
-
       - name: Add upstream repository
         run: |
           git remote add upstream https://github.com/sabarense/eco_guia || true
-          git remote -v  # Re-verificar para garantir que upstream foi adicionado corretamente
+          git remote -v  # Verifica se o remote upstream foi adicionado corretamente
 
       - name: Fetch upstream
         run: |
-          git fetch upstream
-          git branch -a  # Verificar todas as branches
+          git fetch upstream  # Traz todas as branches e commits do repositório original
 
       - name: Verificar se a branch 'master' existe localmente
         run: |
-          if git show-ref --quiet refs/heads/master; then
-            echo "Branch 'master' encontrada localmente"
-            git checkout master
-          else
-            echo "Branch 'master' não encontrada localmente, verificando remotas"
-            git checkout -b master --track upstream/master || exit 128
-          fi
+          git checkout master || git checkout -b master --track origin/master
 
-      - name: Merge upstream changes
+      - name: Rebase master com upstream/master
         run: |
-          git merge upstream/master --no-edit || exit 128
-          git status  # Verificar se o merge foi bem-sucedido
+          git rebase upstream/master || exit 1  # Rebase dos commits do upstream/master no topo do fork
 
       - name: Push changes to origin
-        run: git push origin master || exit 128
+        run: |
+          git push origin master --force-with-lease  # Faz push forçado com segurança para a master do fork
