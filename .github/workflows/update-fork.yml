@@ -13,47 +13,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          ref: master  # Certifique-se de que estamos na branch master
+          ref: master  # Certifique-se de estar na branch master do fork
 
       - name: Set up git
         run: |
           git config --global user.email "alexandrefersoa@gmail.com"
           git config --global user.name "Alexandre Niess"
 
-      - name: Verificar repositórios remotos
-        run: git remote -v  # Verificar se o upstream já está configurado corretamente
+      - name: Verificar remotes existentes
+        run: git remote -v  # Verificar se upstream já está configurado
 
       - name: Add upstream repository
-        run: git remote add upstream https://github.com/sabarense/eco_guia || true
+        run: |
+          git remote add upstream https://github.com/sabarense/eco_guia || true
+          git remote -v  # Re-verificar para garantir que upstream foi adicionado
 
       - name: Fetch upstream
         run: |
-          git fetch upstream
-          git branch -a  # Verificar as branches disponíveis
+          git fetch upstream  # Traz as atualizações do repositório original
+          git fetch --all  # Garante que todas as branches sejam trazidas
 
-      - name: Verificar se a branch 'master' existe
+      - name: Verificar branch local
         run: |
-          if git show-ref --quiet refs/heads/master; then
-            echo "Branch 'master' encontrada, trocando para 'master'"
-            git checkout master
-          else
-            echo "Branch 'master' não encontrada, criando 'master'"
-            git checkout -b master
-          fi
+          git checkout master  # Garante que estamos na branch master
+          git branch -a  # Exibe todas as branches disponíveis para verificação
 
-      - name: Merge upstream changes
+      - name: Merge upstream/master into local master
         run: |
-          git merge upstream/master --no-commit || true
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Conflitos encontrados, merge incompleto."
-            exit 1
-          else
-            echo "Merge realizado com sucesso."
-          fi
+          git merge upstream/master --no-edit  # Faz o merge das mudanças da master do upstream
+          git status  # Verifica se o merge foi bem-sucedido
 
-      - name: Verificar estado após merge
-        run: git status  # Verificar o estado atual do repositório após o merge
-
-      - name: Push changes
-        if: success()
-        run: git push origin master
+      - name: Push changes to origin
+        run: git push origin master  # Faz o push das mudanças para seu fork
