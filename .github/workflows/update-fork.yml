@@ -26,22 +26,27 @@ jobs:
       - name: Add upstream repository
         run: |
           git remote add upstream https://github.com/sabarense/eco_guia || true
-          git remote -v  # Re-verificar para garantir que upstream foi adicionado
+          git remote -v  # Re-verificar para garantir que upstream foi adicionado corretamente
 
       - name: Fetch upstream
         run: |
-          git fetch upstream  # Traz as atualizações do repositório original
-          git fetch --all  # Garante que todas as branches sejam trazidas
+          git fetch upstream
+          git branch -a  # Verificar todas as branches
 
-      - name: Verificar branch local
+      - name: Verificar se a branch 'master' existe localmente
         run: |
-          git checkout master  # Garante que estamos na branch master
-          git branch -a  # Exibe todas as branches disponíveis para verificação
+          if git show-ref --quiet refs/heads/master; then
+            echo "Branch 'master' encontrada localmente"
+            git checkout master
+          else
+            echo "Branch 'master' não encontrada localmente, verificando remotas"
+            git checkout -b master --track upstream/master || exit 128
+          fi
 
-      - name: Merge upstream/master into local master
+      - name: Merge upstream changes
         run: |
-          git merge upstream/master --no-edit  # Faz o merge das mudanças da master do upstream
-          git status  # Verifica se o merge foi bem-sucedido
+          git merge upstream/master --no-edit || exit 128
+          git status  # Verificar se o merge foi bem-sucedido
 
       - name: Push changes to origin
-        run: git push origin master  # Faz o push das mudanças para seu fork
+        run: git push origin master || exit 128
